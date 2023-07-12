@@ -48,14 +48,17 @@ class Game:
                     running = False
                     self.client_status = "quit"
                 if not game_pending and event.type == pygame.KEYUP:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_SPACE and self.multiplayer is False:
                         game_pending = True
                         self.client_status = "fly"
                     elif event.key == pygame.K_m and self.multiplayer is False:
                         self.multiplayer = True
+                        self.foreground.clear_map()
                         send_message_th = threading.Thread(target=client.run_client,
                                                            args=(self.q_to_send, self.q_to_receive, self.client_uuid))
                         send_message_th.start()
+                    elif event.key == pygame.K_r and self.multiplayer:
+                        self.client_status = "ready"
 
             # Aktualizacja logiki gry
             if game_pending is True:
@@ -76,7 +79,13 @@ class Game:
                 #     for _ in range(5):
                 #         self.q_to_receive.get()
                 if self.q_to_receive.qsize() > 0:
-                    players_dicts = self.q_to_receive.get()
+                    response = self.q_to_receive.get()
+                    if "the_map" in response:
+                        self.foreground.load_map(**response["the_map"])
+                    players_dicts = response.get("new_mess")
+                    if players_dicts is None:
+                        continue
+
                     # print(players_dicts)
                     for player_dict in players_dicts:
                         player_obj: resources.Player = self.players_data.get(player_dict.get("uuid"))
@@ -103,6 +112,11 @@ class Game:
                 # print(player_obj.x, player_obj.y)
             if not game_pending:
                 self.start_screen.draw(self.screen, self.multiplayer)
+                if self.multiplayer or False:
+                    cd = self.start_screen.draw_countdown(self.screen, delta_time)
+                    if cd:
+                        self.client_status = "fly"
+                        game_pending = True
             pygame.display.flip()
 
         pygame.quit()

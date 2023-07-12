@@ -12,6 +12,7 @@ class StartScreen:
 
     def __init__(self):
         title_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraBold.ttf", 144)
+        self.countdown_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraBold.ttf", 188)
         subtitle_font = pygame.font.Font("res/Turret_Road/TurretRoad-Bold.ttf", 64)
         inst_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraLight.ttf", 32)
         self.title_text = title_font.render("Fluffy Duck", True, (0, 0, 0))
@@ -19,6 +20,8 @@ class StartScreen:
         self.inst1 = inst_font.render(self.INST01, True, (0, 0, 0))
         self.inst15 = inst_font.render(self.INST15, True, (0, 0, 0))
         self.inst2 = inst_font.render(self.INST02, True, (0, 0, 0))
+
+        self.countdown_clock = 3.5
 
     def draw(self, window, is_multiplayer):
         window.blit(self.title_text, (10, 10))
@@ -35,6 +38,16 @@ class StartScreen:
         if not is_multiplayer:
             h += self.inst1.get_height() + 30
             window.blit(self.inst2, (20, h))
+
+    def draw_countdown(self, window, delta_time):
+        clock = str(round(self.countdown_clock, 1))
+        text = self.countdown_font.render(clock, True, (0, 0, 0))
+        window.blit(text, (400 - (text.get_width() // 2), 300 - (text.get_height() // 2)))
+        self.countdown_clock -= delta_time
+        if self.countdown_clock < 0:
+            return True
+        return False
+
 
 
 class Background:
@@ -75,6 +88,19 @@ class Foreground:
         self.speedup = False
         self.boost = False
         self.one_pen = False
+
+    def clear_map(self):
+        self.poles.clear()
+        self.potions.clear()
+
+    def load_map(self, poles, potions, fline, **_):
+        for var in poles:
+            self.poles.append(Pole(*var))
+
+        for var in potions:
+            self.potions.append(Potion(*var))
+
+        self.fline = FinishingLine(fline)
 
     def f_line_tick(self, *args, **kwargs):
         return self.fline.tick(*args, **kwargs)

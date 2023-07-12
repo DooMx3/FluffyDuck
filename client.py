@@ -6,7 +6,10 @@ import time
 import uuid
 
 server = socket.gethostbyname(socket.gethostname())
-# server = "192.168.1.104"
+server = "192.168.1.104"
+# server = "192.168.1.113"
+
+BYTES = 4 * 1024
 
 
 def read_messages(q):
@@ -27,7 +30,7 @@ def run_client(send_queue, receive_queue, client_uuid):
             client_socket.sendall(message.encode())
 
             # Receive the server's response
-            response = client_socket.recv(1024).decode()
+            response = client_socket.recv(BYTES).decode()
             print('Server response:', response)
             if not response:
                 continue
@@ -38,8 +41,9 @@ def run_client(send_queue, receive_queue, client_uuid):
                 r_dict = {}
             new_mess = r_dict.get('new_mess')
 
-            if new_mess:
-                receive_queue.put(new_mess)
+            # if new_mess:
+            #     receive_queue.put(new_mess)
+            receive_queue.put(r_dict)
 
             if send_queue.qsize() > 0:
                 message = send_queue.get()
