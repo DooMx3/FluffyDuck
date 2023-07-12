@@ -2,6 +2,7 @@ import socket
 import json
 import threading
 from random import randint, choice
+from time import sleep
 
 from clsClient import Client
 from resources import *
@@ -31,7 +32,12 @@ def receive(client: Client):
     if not str_data:
         return False
     if "{" in str_data:
-        return json.loads(str_data)
+        try:
+            loaded = json.loads(str_data)
+        except json.decoder.JSONDecodeError as e:
+            loaded = {}
+            print(f'Error occurred with client {client}: {e}~~ >{str_data}<')
+        return loaded
     return str_data
 
 
@@ -56,22 +62,33 @@ def handle_client(client: Client, clients: list[Client], the_map: dict):
 
             # print('Received message from {}: {}'.format(client.address, data))
             if data != 'none':
+                client.data = data
                 for other in clients:
                     if other is not client:
                         other.put_mess(data)
 
             # Send a response to the client
-            response = {"new_mess": client.get_all()}
-            print(response)
+            response = {"new_mess": client.get_all(), "server_info": client.get_server_info()}
             client.skt.sendall(f"{json.dumps(response)}".encode())
 
-    except Exception as e:
+    except SyntaxError as e:
         print(f'Error occurred with client {client}: {e}')
 
     finally:
         # Close the client socket connection
         client.skt.close()
+        clients.remove(client)
         print('Connection closed with {}:{}'.format(*client.address))
+
+
+def server(**kwargs):
+    while True:
+        statuses = [client.data.get("status") == "ready" for client in kwargs["clients"]]
+        if all(statuses):
+            for client in kwargs["clients"]:
+                print("set")
+                client.put_server_info({"status": "set"})
+        sleep(1)
 
 
 def main():
@@ -85,6 +102,9 @@ def main():
 
     clients = []
 
+    client_thread = threading.Thread(target=server, kwargs={"clients": clients})
+    client_thread.start()
+
     # generating map
     the_map = generate_map()
 
@@ -96,7 +116,6 @@ def main():
         print('Accepted connection from {}:{}'.format(*client_address))
         client_thread = threading.Thread(target=handle_client, args=(client, clients, the_map))
         client_thread.start()
-
 
     # Close the server socket
     # server_socket.close()

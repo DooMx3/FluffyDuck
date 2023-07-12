@@ -6,8 +6,9 @@ import time
 import uuid
 
 server = socket.gethostbyname(socket.gethostname())
-server = "192.168.1.104"
+# server = "192.168.1.114"
 # server = "192.168.1.113"
+# server = "192.168.56.1"
 
 BYTES = 4 * 1024
 
@@ -31,7 +32,7 @@ def run_client(send_queue, receive_queue, client_uuid):
 
             # Receive the server's response
             response = client_socket.recv(BYTES).decode()
-            print('Server response:', response)
+            # print('Server response:', response)
             if not response:
                 continue
             try:

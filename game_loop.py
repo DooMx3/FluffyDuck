@@ -40,6 +40,7 @@ class Game:
         running = True
 
         while running:
+            print(self.q_to_send.qsize(), self.q_to_receive.qsize())
             delta_time = self.clock.tick(self.FPS) / 1000
 
             events = pygame.event.get()
@@ -68,20 +69,23 @@ class Game:
                     game_pending = "end"
                     self.client_status = "end"
             if self.multiplayer:
-                client_data = {"uuid": self.client_uuid,
-                               "status": self.client_status,
-                               "x": round(self.foreground.player_x),
-                               "y": round(self.player.y),
-                               "ver_velocity": round(self.player.ver_velocity, 2),
-                               "hor_velocity": round(self.foreground.player_vel, 2)}
-                self.q_to_send.put(json.dumps(client_data))
-                # if self.q_to_receive.qsize() > 5:
-                #     for _ in range(5):
-                #         self.q_to_receive.get()
-                if self.q_to_receive.qsize() > 0:
+                for player in self.players_data.values():
+                    player.tick(delta_time, events)
+
+                if self.q_to_send.qsize() == 0:
+                    client_data = {"uuid": self.client_uuid,
+                                   "status": self.client_status,
+                                   "x": round(self.foreground.player_x),
+                                   "y": round(self.player.y),
+                                   "ver_velocity": round(self.player.ver_velocity, 2),
+                                   "hor_velocity": round(self.foreground.player_vel, 2)}
+                    self.q_to_send.put(json.dumps(client_data))
+                while self.q_to_receive.qsize() > 0:
                     response = self.q_to_receive.get()
                     if "the_map" in response:
                         self.foreground.load_map(**response["the_map"])
+                    if "server_info" in response and "status" in response["server_info"]:
+                        self.client_status = response["server_info"]["status"]
                     players_dicts = response.get("new_mess")
                     if players_dicts is None:
                         continue
@@ -97,7 +101,7 @@ class Game:
                                     player_dict["y"],
                                     player_dict["ver_velocity"],
                                 )
-                        else:
+                        elif player_dict.get("uuid") is not None:
                             this_uuid = player_dict["uuid"]
                             self.players_data[this_uuid] = resources.Player(uuid=this_uuid)
                             print("Nowy gracz")
@@ -112,7 +116,7 @@ class Game:
                 # print(player_obj.x, player_obj.y)
             if not game_pending:
                 self.start_screen.draw(self.screen, self.multiplayer)
-                if self.multiplayer or False:
+                if self.multiplayer and self.client_status == "set":
                     cd = self.start_screen.draw_countdown(self.screen, delta_time)
                     if cd:
                         self.client_status = "fly"
