@@ -8,7 +8,7 @@ import uuid
 server = socket.gethostbyname(socket.gethostname())
 # server = "192.168.1.114"
 # server = "192.168.1.113"
-# server = "192.168.56.1"
+server = "192.168.1.106"
 
 BYTES = 4 * 1024
 

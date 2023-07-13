@@ -36,6 +36,7 @@ class Game:
         self.players_data = {}
 
     def loop(self):
+        players_ready = "/"
         game_pending = False
         running = True
 
@@ -70,7 +71,7 @@ class Game:
                     self.client_status = "end"
             if self.multiplayer:
                 for player in self.players_data.values():
-                    player.tick(delta_time, events)
+                    player.btick(delta_time)
 
                 if self.q_to_send.qsize() == 0:
                     client_data = {"uuid": self.client_uuid,
@@ -82,10 +83,14 @@ class Game:
                     self.q_to_send.put(json.dumps(client_data))
                 while self.q_to_receive.qsize() > 0:
                     response = self.q_to_receive.get()
+                    print(response)
                     if "the_map" in response:
                         self.foreground.load_map(**response["the_map"])
-                    if "server_info" in response and "status" in response["server_info"]:
-                        self.client_status = response["server_info"]["status"]
+                    if "server_info" in response:
+                        if "status" in response["server_info"]:
+                            self.client_status = response["server_info"]["status"]
+                        if "ready_players" in response["server_info"]:
+                            players_ready = response["server_info"]["ready_players"]
                     players_dicts = response.get("new_mess")
                     if players_dicts is None:
                         continue
@@ -115,7 +120,7 @@ class Game:
                 player_obj.draw(self.screen)
                 # print(player_obj.x, player_obj.y)
             if not game_pending:
-                self.start_screen.draw(self.screen, self.multiplayer)
+                self.start_screen.draw(self.screen, self.multiplayer, players_ready)
                 if self.multiplayer and self.client_status == "set":
                     cd = self.start_screen.draw_countdown(self.screen, delta_time)
                     if cd:

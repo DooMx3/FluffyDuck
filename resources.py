@@ -14,24 +14,24 @@ class StartScreen:
         title_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraBold.ttf", 144)
         self.countdown_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraBold.ttf", 188)
         subtitle_font = pygame.font.Font("res/Turret_Road/TurretRoad-Bold.ttf", 64)
-        inst_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraLight.ttf", 32)
+        self.inst_font = pygame.font.Font("res/Turret_Road/TurretRoad-ExtraLight.ttf", 32)
         self.title_text = title_font.render("Fluffy Duck", True, (0, 0, 0))
         self.subtitle = subtitle_font.render(self.SUBTITLE, True, (240, 0, 0))
-        self.inst1 = inst_font.render(self.INST01, True, (0, 0, 0))
-        self.inst15 = inst_font.render(self.INST15, True, (0, 0, 0))
-        self.inst2 = inst_font.render(self.INST02, True, (0, 0, 0))
+        self.inst1 = self.inst_font.render(self.INST01, True, (0, 0, 0))
+        self.inst15 = self.inst_font.render(self.INST15, True, (0, 0, 0))
+        self.inst2 = self.inst_font.render(self.INST02, True, (0, 0, 0))
 
         self.countdown_clock = 3.5
 
-    def draw(self, window, is_multiplayer):
+    def draw(self, window, is_multiplayer, players_read=""):
         window.blit(self.title_text, (10, 10))
         h = self.title_text.get_height()
         if is_multiplayer:
             window.blit(self.subtitle, (40, h + 10))
             h += self.subtitle.get_height() + 20
-
-        if is_multiplayer:
             window.blit(self.inst15, (20, h + 30))
+            pr = self.inst_font.render(f"ready: {players_read}", True, (0, 0, 0))
+            window.blit(pr, (70, h + 130))
         else:
             window.blit(self.inst1, (20, h + 30))
 

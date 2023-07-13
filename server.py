@@ -85,9 +85,13 @@ def server(**kwargs):
     while True:
         statuses = [client.data.get("status") == "ready" for client in kwargs["clients"]]
         if all(statuses):
+            print("set")
             for client in kwargs["clients"]:
-                print("set")
                 client.put_server_info({"status": "set"})
+
+        statuses = [client.data.get("status") in ("ready", "set") for client in kwargs["clients"]]
+        for client in kwargs["clients"]:
+            client.put_server_info({"ready_players": f"{statuses.count(True)} / {len(statuses)}"})
         sleep(1)
 
 
