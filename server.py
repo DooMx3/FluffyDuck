@@ -84,7 +84,7 @@ def handle_client(client: Client, clients: list[Client], the_map: dict):
 def server(**kwargs):
     while True:
         statuses = [client.data.get("status") == "ready" for client in kwargs["clients"]]
-        if all(statuses):
+        if all(statuses) and statuses:
             print("set")
             for client in kwargs["clients"]:
                 client.put_server_info({"status": "set"})
